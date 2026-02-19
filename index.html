@@ -5,70 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Учет Предприятия</title>
     <style>
-        :root {
-            --bg-color: #121212;
-            --surface-color: #1e1e1e;
-            --primary-color: #bb86fc;
-            --text-color: #ffffff;
-            --secondary-text: #b0b0b0;
-            --danger-color: #cf6679;
-            --success-color: #03dac6;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-        }
-        .container {
-            width: 100%;
-            max-width: 600px;
-            padding: 20px;
-            box-sizing: border-box;
-        }
+        :root { --bg-color: #121212; --surface-color: #1e1e1e; --primary-color: #bb86fc; --text-color: #ffffff; --secondary-text: #b0b0b0; --danger-color: #cf6679; --success-color: #03dac6; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 600px; padding: 20px; box-sizing: border-box; }
         h1, h2 { text-align: center; color: var(--primary-color); }
-        .btn {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            margin: 10px 0;
-            background-color: var(--surface-color);
-            color: var(--text-color);
-            border: 1px solid #333;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: 0.2s;
-            text-align: center;
-            text-decoration: none;
-        }
+        .btn { display: block; width: 100%; padding: 15px; margin: 10px 0; background-color: var(--surface-color); color: var(--text-color); border: 1px solid #333; border-radius: 8px; font-size: 16px; cursor: pointer; transition: 0.2s; text-align: center; text-decoration: none; }
         .btn:active { background-color: var(--primary-color); color: #000; }
-        .btn-group { display: flex; gap: 10px; }
-        .btn-group .btn { flex: 1; }
-        input, select {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            background-color: var(--surface-color);
-            border: 1px solid #333;
-            color: white;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 16px;
-        }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; background-color: var(--surface-color); border: 1px solid #333; color: white; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
         .hidden { display: none; }
         .back-btn { background-color: #333; margin-bottom: 20px; }
-        .loading { text-align: center; color: var(--secondary-text); margin-top: 20px; }
-        
-        /* Mobile adjustments */
-        @media (max-width: 400px) {
-            .btn { padding: 12px; font-size: 14px; }
-        }
+        .loading { text-align: center; color: var(--secondary-text); margin-top: 20px; font-size: 14px; }
+        .price-row { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; background: #252525; padding: 10px; border-radius: 6px; }
+        .price-row label { flex: 1; }
+        .price-row input { flex: 1; margin: 0 0 0 10px; width: auto; }
     </style>
 </head>
 <body>
@@ -79,9 +29,10 @@
         <h1>Учет Предприятия</h1>
         <button class="btn" onclick="showSection('menu-office')">ОФИС</button>
         <button class="btn" onclick="showSection('menu-regions')">АГЕНТЫ</button>
+        <button class="btn" onclick="openPrices()">ЦЕНА</button>
     </div>
 
-    <!-- ОФИС: ВЫБОР ТИПА -->
+    <!-- ОФИС -->
     <div id="menu-office" class="hidden">
         <button class="btn back-btn" onclick="showSection('menu-main')">← Назад</button>
         <h2>Тип Платежа</h2>
@@ -90,7 +41,6 @@
         <button class="btn" onclick="selectOfficeType('Карта')">Карта</button>
     </div>
 
-    <!-- ОФИС: ПРИХОД/РАСХОД -->
     <div id="menu-office-flow" class="hidden">
         <button class="btn back-btn" onclick="showSection('menu-office')">← Назад</button>
         <h2 id="office-type-title"></h2>
@@ -98,24 +48,22 @@
         <button class="btn" style="border-color: var(--danger-color)" onclick="selectOfficeMode('Расход')">Расход</button>
     </div>
 
-    <!-- ОФИС: ВВОД ДАННЫХ -->
     <div id="form-office" class="hidden">
         <button class="btn back-btn" onclick="showSection('menu-office-flow')">← Назад</button>
         <h2>Ввод данных</h2>
         <input type="number" id="office-amount" placeholder="Сумма">
         <input type="text" id="office-comment" placeholder="Комментарий">
         <button class="btn" onclick="submitOffice()">Сохранить</button>
-        <div id="office-loading" class="loading hidden">Сохранение...</div>
+        <div id="office-loading" class="loading hidden">Отправка...</div>
     </div>
 
-    <!-- АГЕНТЫ: ВЫБОР РЕГИОНА -->
+    <!-- АГЕНТЫ -->
     <div id="menu-regions" class="hidden">
         <button class="btn back-btn" onclick="showSection('menu-main')">← Назад</button>
         <h2>Регионы</h2>
         <div id="regions-list"></div>
     </div>
 
-    <!-- РЕГИОН: СУММА ИЛИ ТОВАР -->
     <div id="menu-region-action" class="hidden">
         <button class="btn back-btn" onclick="showSection('menu-regions')">← Назад</button>
         <h2 id="region-title"></h2>
@@ -123,7 +71,6 @@
         <button class="btn" onclick="selectRegionMode('product')">Товар</button>
     </div>
 
-    <!-- РЕГИОН: ВВОД СУММЫ -->
     <div id="form-region-amount" class="hidden">
         <button class="btn back-btn" onclick="showSection('menu-region-action')">← Назад</button>
         <h2>Финансы</h2>
@@ -135,10 +82,9 @@
         <input type="number" id="region-amount" placeholder="Сумма">
         <input type="text" id="region-amount-comment" placeholder="Комментарий">
         <button class="btn" onclick="submitRegionAmount()">Сохранить</button>
-        <div id="region-amount-loading" class="loading hidden">Сохранение...</div>
+        <div id="region-amount-loading" class="loading hidden">Отправка...</div>
     </div>
 
-    <!-- РЕГИОН: ВВОД ТОВАРА -->
     <div id="form-region-product" class="hidden">
         <button class="btn back-btn" onclick="showSection('menu-region-action')">← Назад</button>
         <h2>Товары</h2>
@@ -146,22 +92,42 @@
         <input type="text" id="region-quantities" placeholder="Например: 10 5 0 2 1 3">
         <input type="text" id="region-product-comment" placeholder="Комментарий">
         <button class="btn" onclick="submitRegionProduct()">Сохранить</button>
-        <div id="region-product-loading" class="loading hidden">Сохранение...</div>
+        <div id="region-product-loading" class="loading hidden">Отправка...</div>
+    </div>
+
+    <!-- ЦЕНЫ -->
+    <div id="menu-prices" class="hidden">
+        <button class="btn back-btn" onclick="showSection('menu-main')">← Назад</button>
+        <h2>Настройка Цен</h2>
+        <div id="prices-inputs"></div>
+        <button class="btn" style="margin-top:20px; border-color: var(--success-color);" onclick="savePrices()">Сохранить Цены</button>
+        <div id="prices-loading" class="loading hidden">Сохранение...</div>
     </div>
 </div>
 
 <script>
-    // ВСТАВЬТЕ СЮДА ССЫЛКУ ИЗ ЭТАПА 2 (Apps Script Web App URL)
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbygQNBr_OXCvWKC3GeUfewPAd_FzyVzPsfDFvpgr4picrYIVWmi_LIg9P4mDY9sVDpg-Q/exec";
-
-    const regions = ["Ташкент", "Таш.обл", "Гулистан", "Джизак", "Самарканд", "Фергана", "Наманган", "Андижан", "Карши", "Термиз", "Бухара", "Навоий", "Хорезм", "Нукус"];
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxCh-UU6BrAdZmW6CxsvI1gxrJfCiM2FEgtK0hw5fOoZQaEgyow9lPQoBRxXwide1Fgng/exec";
     
-    let currentOfficeType = "";
-    let currentOfficeMode = ""; // Приход или Расход
-    let currentRegion = "";
-    let currentRegionMode = ""; // amount or product
+    // НОВЫЙ ПОРЯДОК РЕГИОНОВ
+    const regions = ["Гулистан", "Бухара", "Наманган", "Андижан", "Карши", "Термиз", "Нукус", "Ташкент", "Таш.обл", "Навоий", "Фергана", "Джизак", "Самарканд", "Хорезм"];
+    
+    // Товары и ключи
+    const products = [
+        { key: 'seven', name: 'Севен' },
+        { key: 'lady', name: 'Леди' },
+        { key: 'trib', name: 'Триб' },
+        { key: 'nef', name: 'Неф' },
+        { key: 'lact', name: 'Лакт' },
+        { key: 'perf', name: 'Перф' }
+    ];
 
-    // Инициализация списка регионов
+    let currentPrices = {};
+    let currentOfficeType = "";
+    let currentOfficeMode = "";
+    let currentRegion = "";
+    let currentRegionMode = "";
+
+    // Инициализация регионов
     const regionListDiv = document.getElementById('regions-list');
     regions.forEach(reg => {
         const btn = document.createElement('button');
@@ -171,130 +137,125 @@
         regionListDiv.appendChild(btn);
     });
 
+    // Загрузка цен при старте
+    fetch(SCRIPT_URL)
+        .then(r => r.json())
+        .then(data => {
+            currentPrices = data;
+            localStorage.setItem('biz_prices', JSON.stringify(data));
+        })
+        .catch(() => {
+            const stored = localStorage.getItem('biz_prices');
+            if(stored) currentPrices = JSON.parse(stored);
+        });
+
     function showSection(id) {
         document.querySelectorAll('.container > div').forEach(div => div.classList.add('hidden'));
         document.getElementById(id).classList.remove('hidden');
     }
 
-    // --- ОФИС ЛОГИКА ---
-    function selectOfficeType(type) {
-        currentOfficeType = type;
-        document.getElementById('office-type-title').innerText = type;
-        showSection('menu-office-flow');
-    }
-    function selectOfficeMode(mode) {
-        currentOfficeMode = mode;
-        showSection('form-office');
-    }
+    // --- ОФИС ---
+    function selectOfficeType(type) { currentOfficeType = type; document.getElementById('office-type-title').innerText = type; showSection('menu-office-flow'); }
+    function selectOfficeMode(mode) { currentOfficeMode = mode; showSection('form-office'); }
     function submitOffice() {
         const amount = document.getElementById('office-amount').value;
         const comment = document.getElementById('office-comment').value;
         if(!amount) return alert("Введите сумму");
-
-        const loading = document.getElementById('office-loading');
-        loading.classList.remove('hidden');
-
+        toggleLoading('office-loading', true);
         let income = 0, expense = 0;
-        if(currentOfficeMode === 'Приход') income = amount;
-        else expense = amount;
-
-        const data = {
-            sheet: "ОФИС",
-            type: currentOfficeType,
-            income: income,
-            expense: expense,
-            comment: comment
-        };
-
+        if(currentOfficeMode === 'Приход') income = amount; else expense = amount;
+        const data = { sheet: "ОФИС", type: currentOfficeType, income: income, expense: expense, comment: comment };
         sendData(data, () => {
-            loading.classList.add('hidden');
-            document.getElementById('office-amount').value = '';
-            document.getElementById('office-comment').value = '';
-            alert("Сохранено!");
-            showSection('menu-main');
+            toggleLoading('office-loading', false);
+            document.getElementById('office-amount').value = ''; document.getElementById('office-comment').value = '';
+            alert("Сохранено!"); showSection('menu-main');
         });
     }
 
-    // --- РЕГИОНЫ ЛОГИКА ---
-    function selectRegion(region) {
-        currentRegion = region;
-        document.getElementById('region-title').innerText = region;
-        showSection('menu-region-action');
-    }
-    function selectRegionMode(mode) {
-        currentRegionMode = mode;
-        if(mode === 'amount') showSection('form-region-amount');
-        else showSection('form-region-product');
-    }
+    // --- РЕГИОНЫ ---
+    function selectRegion(region) { currentRegion = region; document.getElementById('region-title').innerText = region; showSection('menu-region-action'); }
+    function selectRegionMode(mode) { currentRegionMode = mode; if(mode === 'amount') showSection('form-region-amount'); else showSection('form-region-product'); }
 
     function submitRegionAmount() {
         const amount = document.getElementById('region-amount').value;
         const type = document.getElementById('region-pay-type').value;
         const comment = document.getElementById('region-amount-comment').value;
         if(!amount) return alert("Введите сумму");
-
-        const loading = document.getElementById('region-amount-loading');
-        loading.classList.remove('hidden');
-
-        // Для региона в столбец ФинВвод пишем сумму, в коммент добавляем тип платежа
-        const data = {
-            sheet: currentRegion,
-            quantities: [0,0,0,0,0,0], // Пустые товары
-            finAmount: amount + " (" + type + ")", 
-            comment: comment
-        };
-
+        toggleLoading('region-amount-loading', true);
+        const data = { sheet: currentRegion, quantities: [0,0,0,0,0,0], finAmount: amount, payType: type, comment: comment };
         sendData(data, () => {
-            loading.classList.add('hidden');
-            document.getElementById('region-amount').value = '';
-            document.getElementById('region-amount-comment').value = '';
-            alert("Сохранено!");
-            showSection('menu-main');
+            toggleLoading('region-amount-loading', false);
+            document.getElementById('region-amount').value = ''; document.getElementById('region-amount-comment').value = '';
+            alert("Сохранено!"); showSection('menu-main');
         });
     }
 
     function submitRegionProduct() {
         const qtyStr = document.getElementById('region-quantities').value;
         const comment = document.getElementById('region-product-comment').value;
-        
         const quantities = qtyStr.trim().split(/\s+/).map(Number);
-        if(quantities.length !== 6) return alert("Нужно ввести 6 чисел (по количеству товаров)");
-
-        const loading = document.getElementById('region-product-loading');
-        loading.classList.remove('hidden');
-
-        const data = {
-            sheet: currentRegion,
-            quantities: quantities,
-            finAmount: 0,
-            comment: comment
-        };
-
+        if(quantities.length !== 6) return alert("Нужно ввести 6 чисел");
+        toggleLoading('region-product-loading', true);
+        const data = { sheet: currentRegion, quantities: quantities, finAmount: 0, payType: "", comment: comment };
         sendData(data, () => {
-            loading.classList.add('hidden');
-            document.getElementById('region-quantities').value = '';
-            document.getElementById('region-product-comment').value = '';
-            alert("Сохранено!");
+            toggleLoading('region-product-loading', false);
+            document.getElementById('region-quantities').value = ''; document.getElementById('region-product-comment').value = '';
+            alert("Сохранено!"); showSection('menu-main');
+        });
+    }
+
+    // --- ЦЕНЫ ---
+    function openPrices() {
+        const container = document.getElementById('prices-inputs');
+        container.innerHTML = '';
+        // Берем из localStorage или дефолт
+        const stored = localStorage.getItem('biz_prices');
+        const prices = stored ? JSON.parse(stored) : currentPrices;
+
+        products.forEach(p => {
+            const row = document.createElement('div');
+            row.className = 'price-row';
+            row.innerHTML = `
+                <label>${p.name}</label>
+                <input type="number" id="price-${p.key}" value="${prices[p.key] || 0}">
+            `;
+            container.appendChild(row);
+        });
+        showSection('menu-prices');
+    }
+
+    function savePrices() {
+        const newPrices = {};
+        products.forEach(p => {
+            newPrices[p.key] = document.getElementById(`price-${p.key}`).value;
+        });
+        
+        toggleLoading('prices-loading', true);
+        // Сохраняем локально сразу
+        localStorage.setItem('biz_prices', JSON.stringify(newPrices));
+        currentPrices = newPrices;
+
+        const data = { action: 'update_prices', prices: newPrices };
+        sendData(data, () => {
+            toggleLoading('prices-loading', false);
+            alert("Цены обновлены!");
             showSection('menu-main');
         });
     }
 
-    // --- ОБЩАЯ ФУНКЦИЯ ОТПРАВКИ ---
+    // --- ОБЩЕЕ ---
+    function toggleLoading(id, show) {
+        const el = document.getElementById(id);
+        const btn = el.previousElementSibling;
+        if(show) { el.classList.remove('hidden'); btn.disabled = true; }
+        else { el.classList.add('hidden'); btn.disabled = false; }
+    }
+
     function sendData(data, callback) {
-        fetch(SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors', // Важно для Google Apps Script
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        }).then(() => {
-            // no-cors не дает прочитать ответ, но запрос уходит
-            setTimeout(callback, 1000); 
-        }).catch(err => {
-            alert("Ошибка соединения");
-            console.error(err);
-        });
+        fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+        .then(() => { setTimeout(callback, 500); })
+        .catch(err => { alert("Ошибка сети"); toggleLoading('office-loading', false); });
     }
 </script>
-
 </body>
 </html>
