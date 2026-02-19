@@ -24,7 +24,6 @@
 <body>
 
 <div class="container">
-    <!-- ГЛАВНОЕ МЕНЮ -->
     <div id="menu-main">
         <h1>Учет Предприятия</h1>
         <button class="btn" onclick="showSection('menu-office')">ОФИС</button>
@@ -32,7 +31,6 @@
         <button class="btn" onclick="openPrices()">ЦЕНА</button>
     </div>
 
-    <!-- ОФИС -->
     <div id="menu-office" class="hidden">
         <button class="btn back-btn" onclick="showSection('menu-main')">← Назад</button>
         <h2>Тип Платежа</h2>
@@ -57,7 +55,6 @@
         <div id="office-loading" class="loading hidden">Отправка...</div>
     </div>
 
-    <!-- АГЕНТЫ -->
     <div id="menu-regions" class="hidden">
         <button class="btn back-btn" onclick="showSection('menu-main')">← Назад</button>
         <h2>Регионы</h2>
@@ -95,7 +92,6 @@
         <div id="region-product-loading" class="loading hidden">Отправка...</div>
     </div>
 
-    <!-- ЦЕНЫ -->
     <div id="menu-prices" class="hidden">
         <button class="btn back-btn" onclick="showSection('menu-main')">← Назад</button>
         <h2>Настройка Цен</h2>
@@ -106,28 +102,19 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxCh-UU6BrAdZmW6CxsvI1gxrJfCiM2FEgtK0hw5fOoZQaEgyow9lPQoBRxXwide1Fgng/exec";
+    // ВСТАВЬ СЮДА НОВУЮ ССЫЛКУ ИЗ ШАГА 3
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxBzd5sv3JjDfjs4-vPlKK1AFxR3JaBUde7EqM_h-xpYGSBWZnD5Ge-eR7gUskcK-fTSA/exec";
     
-    // НОВЫЙ ПОРЯДОК РЕГИОНОВ
     const regions = ["Гулистан", "Бухара", "Наманган", "Андижан", "Карши", "Термиз", "Нукус", "Ташкент", "Таш.обл", "Навоий", "Фергана", "Джизак", "Самарканд", "Хорезм"];
-    
-    // Товары и ключи
     const products = [
-        { key: 'seven', name: 'Севен' },
-        { key: 'lady', name: 'Леди' },
-        { key: 'trib', name: 'Триб' },
-        { key: 'nef', name: 'Неф' },
-        { key: 'lact', name: 'Лакт' },
-        { key: 'perf', name: 'Перф' }
+        { key: 'seven', name: 'Севен' }, { key: 'lady', name: 'Леди' },
+        { key: 'trib', name: 'Триб' }, { key: 'nef', name: 'Неф' },
+        { key: 'lact', name: 'Лакт' }, { key: 'perf', name: 'Перф' }
     ];
 
     let currentPrices = {};
-    let currentOfficeType = "";
-    let currentOfficeMode = "";
-    let currentRegion = "";
-    let currentRegionMode = "";
+    let currentOfficeType = "", currentOfficeMode = "", currentRegion = "", currentRegionMode = "";
 
-    // Инициализация регионов
     const regionListDiv = document.getElementById('regions-list');
     regions.forEach(reg => {
         const btn = document.createElement('button');
@@ -137,24 +124,19 @@
         regionListDiv.appendChild(btn);
     });
 
-    // Загрузка цен при старте
-    fetch(SCRIPT_URL)
-        .then(r => r.json())
-        .then(data => {
-            currentPrices = data;
-            localStorage.setItem('biz_prices', JSON.stringify(data));
-        })
-        .catch(() => {
-            const stored = localStorage.getItem('biz_prices');
-            if(stored) currentPrices = JSON.parse(stored);
-        });
+    fetch(SCRIPT_URL).then(r => r.json()).then(data => {
+        currentPrices = data;
+        localStorage.setItem('biz_prices', JSON.stringify(data));
+    }).catch(() => {
+        const stored = localStorage.getItem('biz_prices');
+        if(stored) currentPrices = JSON.parse(stored);
+    });
 
     function showSection(id) {
         document.querySelectorAll('.container > div').forEach(div => div.classList.add('hidden'));
         document.getElementById(id).classList.remove('hidden');
     }
 
-    // --- ОФИС ---
     function selectOfficeType(type) { currentOfficeType = type; document.getElementById('office-type-title').innerText = type; showSection('menu-office-flow'); }
     function selectOfficeMode(mode) { currentOfficeMode = mode; showSection('form-office'); }
     function submitOffice() {
@@ -172,7 +154,6 @@
         });
     }
 
-    // --- РЕГИОНЫ ---
     function selectRegion(region) { currentRegion = region; document.getElementById('region-title').innerText = region; showSection('menu-region-action'); }
     function selectRegionMode(mode) { currentRegionMode = mode; if(mode === 'amount') showSection('form-region-amount'); else showSection('form-region-product'); }
 
@@ -204,21 +185,15 @@
         });
     }
 
-    // --- ЦЕНЫ ---
     function openPrices() {
         const container = document.getElementById('prices-inputs');
         container.innerHTML = '';
-        // Берем из localStorage или дефолт
         const stored = localStorage.getItem('biz_prices');
         const prices = stored ? JSON.parse(stored) : currentPrices;
-
         products.forEach(p => {
             const row = document.createElement('div');
             row.className = 'price-row';
-            row.innerHTML = `
-                <label>${p.name}</label>
-                <input type="number" id="price-${p.key}" value="${prices[p.key] || 0}">
-            `;
+            row.innerHTML = `<label>${p.name}</label><input type="number" id="price-${p.key}" value="${prices[p.key] || 0}">`;
             container.appendChild(row);
         });
         showSection('menu-prices');
@@ -226,15 +201,10 @@
 
     function savePrices() {
         const newPrices = {};
-        products.forEach(p => {
-            newPrices[p.key] = document.getElementById(`price-${p.key}`).value;
-        });
-        
+        products.forEach(p => { newPrices[p.key] = document.getElementById(`price-${p.key}`).value; });
         toggleLoading('prices-loading', true);
-        // Сохраняем локально сразу
         localStorage.setItem('biz_prices', JSON.stringify(newPrices));
         currentPrices = newPrices;
-
         const data = { action: 'update_prices', prices: newPrices };
         sendData(data, () => {
             toggleLoading('prices-loading', false);
@@ -243,7 +213,6 @@
         });
     }
 
-    // --- ОБЩЕЕ ---
     function toggleLoading(id, show) {
         const el = document.getElementById(id);
         const btn = el.previousElementSibling;
