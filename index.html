@@ -2,10 +2,299 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Моя первая страница</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Учет Предприятия</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --surface-color: #1e1e1e;
+            --primary-color: #bb86fc;
+            --text-color: #ffffff;
+            --secondary-text: #b0b0b0;
+            --danger-color: #cf6679;
+            --success-color: #03dac6;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        h1, h2 { text-align: center; color: var(--primary-color); }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background-color: var(--surface-color);
+            color: var(--text-color);
+            border: 1px solid #333;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+            text-decoration: none;
+        }
+        .btn:active { background-color: var(--primary-color); color: #000; }
+        .btn-group { display: flex; gap: 10px; }
+        .btn-group .btn { flex: 1; }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background-color: var(--surface-color);
+            border: 1px solid #333;
+            color: white;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        .hidden { display: none; }
+        .back-btn { background-color: #333; margin-bottom: 20px; }
+        .loading { text-align: center; color: var(--secondary-text); margin-top: 20px; }
+        
+        /* Mobile adjustments */
+        @media (max-width: 400px) {
+            .btn { padding: 12px; font-size: 14px; }
+        }
+    </style>
 </head>
 <body>
-    <h1>Привет, мир!</h1>
-    <p>Это мой первый сайт.</p>
+
+<div class="container">
+    <!-- ГЛАВНОЕ МЕНЮ -->
+    <div id="menu-main">
+        <h1>Учет Предприятия</h1>
+        <button class="btn" onclick="showSection('menu-office')">ОФИС</button>
+        <button class="btn" onclick="showSection('menu-regions')">АГЕНТЫ</button>
+    </div>
+
+    <!-- ОФИС: ВЫБОР ТИПА -->
+    <div id="menu-office" class="hidden">
+        <button class="btn back-btn" onclick="showSection('menu-main')">← Назад</button>
+        <h2>Тип Платежа</h2>
+        <button class="btn" onclick="selectOfficeType('Переч')">Перечисление</button>
+        <button class="btn" onclick="selectOfficeType('Налич')">Наличные</button>
+        <button class="btn" onclick="selectOfficeType('Карта')">Карта</button>
+    </div>
+
+    <!-- ОФИС: ПРИХОД/РАСХОД -->
+    <div id="menu-office-flow" class="hidden">
+        <button class="btn back-btn" onclick="showSection('menu-office')">← Назад</button>
+        <h2 id="office-type-title"></h2>
+        <button class="btn" style="border-color: var(--success-color)" onclick="selectOfficeMode('Приход')">Приход</button>
+        <button class="btn" style="border-color: var(--danger-color)" onclick="selectOfficeMode('Расход')">Расход</button>
+    </div>
+
+    <!-- ОФИС: ВВОД ДАННЫХ -->
+    <div id="form-office" class="hidden">
+        <button class="btn back-btn" onclick="showSection('menu-office-flow')">← Назад</button>
+        <h2>Ввод данных</h2>
+        <input type="number" id="office-amount" placeholder="Сумма">
+        <input type="text" id="office-comment" placeholder="Комментарий">
+        <button class="btn" onclick="submitOffice()">Сохранить</button>
+        <div id="office-loading" class="loading hidden">Сохранение...</div>
+    </div>
+
+    <!-- АГЕНТЫ: ВЫБОР РЕГИОНА -->
+    <div id="menu-regions" class="hidden">
+        <button class="btn back-btn" onclick="showSection('menu-main')">← Назад</button>
+        <h2>Регионы</h2>
+        <div id="regions-list"></div>
+    </div>
+
+    <!-- РЕГИОН: СУММА ИЛИ ТОВАР -->
+    <div id="menu-region-action" class="hidden">
+        <button class="btn back-btn" onclick="showSection('menu-regions')">← Назад</button>
+        <h2 id="region-title"></h2>
+        <button class="btn" onclick="selectRegionMode('amount')">Сумма (Финансы)</button>
+        <button class="btn" onclick="selectRegionMode('product')">Товар</button>
+    </div>
+
+    <!-- РЕГИОН: ВВОД СУММЫ -->
+    <div id="form-region-amount" class="hidden">
+        <button class="btn back-btn" onclick="showSection('menu-region-action')">← Назад</button>
+        <h2>Финансы</h2>
+        <select id="region-pay-type">
+            <option value="Переч">Перечисление</option>
+            <option value="Налич">Наличные</option>
+            <option value="Карта">Карта</option>
+        </select>
+        <input type="number" id="region-amount" placeholder="Сумма">
+        <input type="text" id="region-amount-comment" placeholder="Комментарий">
+        <button class="btn" onclick="submitRegionAmount()">Сохранить</button>
+        <div id="region-amount-loading" class="loading hidden">Сохранение...</div>
+    </div>
+
+    <!-- РЕГИОН: ВВОД ТОВАРА -->
+    <div id="form-region-product" class="hidden">
+        <button class="btn back-btn" onclick="showSection('menu-region-action')">← Назад</button>
+        <h2>Товары</h2>
+        <p style="color:var(--secondary-text); font-size:12px;">Введите количества через пробел:<br>Севен Леди Триб Неф Лакт Перф</p>
+        <input type="text" id="region-quantities" placeholder="Например: 10 5 0 2 1 3">
+        <input type="text" id="region-product-comment" placeholder="Комментарий">
+        <button class="btn" onclick="submitRegionProduct()">Сохранить</button>
+        <div id="region-product-loading" class="loading hidden">Сохранение...</div>
+    </div>
+</div>
+
+<script>
+    // ВСТАВЬТЕ СЮДА ССЫЛКУ ИЗ ЭТАПА 2 (Apps Script Web App URL)
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbygQNBr_OXCvWKC3GeUfewPAd_FzyVzPsfDFvpgr4picrYIVWmi_LIg9P4mDY9sVDpg-Q/exec";
+
+    const regions = ["Ташкент", "Таш.обл", "Гулистан", "Джизак", "Самарканд", "Фергана", "Наманган", "Андижан", "Карши", "Термиз", "Бухара", "Навоий", "Хорезм", "Нукус"];
+    
+    let currentOfficeType = "";
+    let currentOfficeMode = ""; // Приход или Расход
+    let currentRegion = "";
+    let currentRegionMode = ""; // amount or product
+
+    // Инициализация списка регионов
+    const regionListDiv = document.getElementById('regions-list');
+    regions.forEach(reg => {
+        const btn = document.createElement('button');
+        btn.className = 'btn';
+        btn.innerText = reg;
+        btn.onclick = () => selectRegion(reg);
+        regionListDiv.appendChild(btn);
+    });
+
+    function showSection(id) {
+        document.querySelectorAll('.container > div').forEach(div => div.classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+    }
+
+    // --- ОФИС ЛОГИКА ---
+    function selectOfficeType(type) {
+        currentOfficeType = type;
+        document.getElementById('office-type-title').innerText = type;
+        showSection('menu-office-flow');
+    }
+    function selectOfficeMode(mode) {
+        currentOfficeMode = mode;
+        showSection('form-office');
+    }
+    function submitOffice() {
+        const amount = document.getElementById('office-amount').value;
+        const comment = document.getElementById('office-comment').value;
+        if(!amount) return alert("Введите сумму");
+
+        const loading = document.getElementById('office-loading');
+        loading.classList.remove('hidden');
+
+        let income = 0, expense = 0;
+        if(currentOfficeMode === 'Приход') income = amount;
+        else expense = amount;
+
+        const data = {
+            sheet: "ОФИС",
+            type: currentOfficeType,
+            income: income,
+            expense: expense,
+            comment: comment
+        };
+
+        sendData(data, () => {
+            loading.classList.add('hidden');
+            document.getElementById('office-amount').value = '';
+            document.getElementById('office-comment').value = '';
+            alert("Сохранено!");
+            showSection('menu-main');
+        });
+    }
+
+    // --- РЕГИОНЫ ЛОГИКА ---
+    function selectRegion(region) {
+        currentRegion = region;
+        document.getElementById('region-title').innerText = region;
+        showSection('menu-region-action');
+    }
+    function selectRegionMode(mode) {
+        currentRegionMode = mode;
+        if(mode === 'amount') showSection('form-region-amount');
+        else showSection('form-region-product');
+    }
+
+    function submitRegionAmount() {
+        const amount = document.getElementById('region-amount').value;
+        const type = document.getElementById('region-pay-type').value;
+        const comment = document.getElementById('region-amount-comment').value;
+        if(!amount) return alert("Введите сумму");
+
+        const loading = document.getElementById('region-amount-loading');
+        loading.classList.remove('hidden');
+
+        // Для региона в столбец ФинВвод пишем сумму, в коммент добавляем тип платежа
+        const data = {
+            sheet: currentRegion,
+            quantities: [0,0,0,0,0,0], // Пустые товары
+            finAmount: amount + " (" + type + ")", 
+            comment: comment
+        };
+
+        sendData(data, () => {
+            loading.classList.add('hidden');
+            document.getElementById('region-amount').value = '';
+            document.getElementById('region-amount-comment').value = '';
+            alert("Сохранено!");
+            showSection('menu-main');
+        });
+    }
+
+    function submitRegionProduct() {
+        const qtyStr = document.getElementById('region-quantities').value;
+        const comment = document.getElementById('region-product-comment').value;
+        
+        const quantities = qtyStr.trim().split(/\s+/).map(Number);
+        if(quantities.length !== 6) return alert("Нужно ввести 6 чисел (по количеству товаров)");
+
+        const loading = document.getElementById('region-product-loading');
+        loading.classList.remove('hidden');
+
+        const data = {
+            sheet: currentRegion,
+            quantities: quantities,
+            finAmount: 0,
+            comment: comment
+        };
+
+        sendData(data, () => {
+            loading.classList.add('hidden');
+            document.getElementById('region-quantities').value = '';
+            document.getElementById('region-product-comment').value = '';
+            alert("Сохранено!");
+            showSection('menu-main');
+        });
+    }
+
+    // --- ОБЩАЯ ФУНКЦИЯ ОТПРАВКИ ---
+    function sendData(data, callback) {
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors', // Важно для Google Apps Script
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        }).then(() => {
+            // no-cors не дает прочитать ответ, но запрос уходит
+            setTimeout(callback, 1000); 
+        }).catch(err => {
+            alert("Ошибка соединения");
+            console.error(err);
+        });
+    }
+</script>
+
 </body>
 </html>
