@@ -1,230 +1,1542 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Учет Предприятия</title>
-    <style>
-        :root { --bg-color: #121212; --surface-color: #1e1e1e; --primary-color: #bb86fc; --text-color: #ffffff; --secondary-text: #b0b0b0; --danger-color: #cf6679; --success-color: #03dac6; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        .container { width: 100%; max-width: 600px; padding: 20px; box-sizing: border-box; }
-        h1, h2 { text-align: center; color: var(--primary-color); }
-        .btn { display: block; width: 100%; padding: 15px; margin: 10px 0; background-color: var(--surface-color); color: var(--text-color); border: 1px solid #333; border-radius: 8px; font-size: 16px; cursor: pointer; transition: 0.2s; text-align: center; text-decoration: none; }
-        .btn:active { background-color: var(--primary-color); color: #000; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; background-color: var(--surface-color); border: 1px solid #333; color: white; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
-        .hidden { display: none; }
-        .back-btn { background-color: #333; margin-bottom: 20px; }
-        .loading { text-align: center; color: var(--secondary-text); margin-top: 20px; font-size: 14px; }
-        .price-row { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; background: #252525; padding: 10px; border-radius: 6px; }
-        .price-row label { flex: 1; }
-        .price-row input { flex: 1; margin: 0 0 0 10px; width: auto; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Учет Предприятия</title>
+<link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+--bg-primary: #0a0a0f;
+--bg-card: #13131a;
+--bg-card-hover: #1a1a24;
+--accent: #bb86fc;
+--green: #00c896;
+--blue: #4fc3f7;
+--orange: #ffab40;
+--red: #ff5370;
+--text-primary: #ffffff;
+--text-secondary: #8888aa;
+--border: rgba(187, 134, 252, 0.15);
+--glow-purple: rgba(187, 134, 252, 0.2);
+--glow-green: rgba(0, 200, 150, 0.2);
+--glow-red: rgba(255, 83, 112, 0.2);
+--font-main: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-main);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 16px;
+  position: relative;
+}
+
+/* Progress Bar */
+#progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--green));
+  width: 0%;
+  transition: width 0.3s ease;
+  z-index: 1000;
+  box-shadow: 0 0 10px var(--glow-purple);
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+
+.header-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.5px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.clock {
+  text-align: right;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.clock-time {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.refresh-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.refresh-btn:hover {
+  background: var(--bg-card-hover);
+  transform: scale(1.05);
+}
+
+.refresh-btn:active {
+  transform: scale(0.97);
+}
+
+.refresh-btn.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Back Button */
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px 0;
+  transition: color 0.2s;
+}
+
+.back-btn:hover {
+  color: var(--accent);
+}
+
+.back-btn::before {
+  content: '←';
+  font-size: 18px;
+}
+
+/* Screen Management */
+.screen {
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+
+.screen.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.screen-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Dashboard Cards Grid */
+.cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.card {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 18px;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  background: var(--bg-card-hover);
+}
+
+.card.cash { border-left: 3px solid var(--green); box-shadow: 0 4px 20px var(--glow-green); }
+.card.bank { border-left: 3px solid var(--blue); box-shadow: 0 4px 20px rgba(79, 195, 247, 0.15); }
+.card.stock { border-left: 3px solid var(--orange); box-shadow: 0 4px 20px rgba(255, 171, 64, 0.15); }
+.card.debts { border-left: 3px solid var(--red); box-shadow: 0 4px 20px var(--glow-red); }
+
+.card-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.card-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.card-subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Alert Bar */
+.alert-bar {
+  background: linear-gradient(135deg, rgba(255, 83, 112, 0.15), rgba(255, 83, 112, 0.05));
+  border: 1px solid var(--red);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  display: none;
+  animation: pulse 2s infinite;
+}
+
+.alert-bar.show {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--glow-red); }
+  50% { box-shadow: 0 0 0 8px transparent; }
+}
+
+.alert-icon {
+  font-size: 18px;
+  color: var(--red);
+}
+
+.alert-text {
+  font-size: 13px;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.alert-ticker {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.alert-ticker span {
+  display: inline-block;
+  animation: ticker 15s linear infinite;
+  padding-left: 100%;
+}
+
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+
+/* Action Blocks */
+.action-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.action-block {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-block::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 16px;
+  padding: 1px;
+  background: linear-gradient(135deg, var(--accent), transparent);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.action-block:hover {
+  transform: translateY(-2px);
+  background: var(--bg-card-hover);
+}
+
+.action-block:hover::before {
+  opacity: 1;
+  box-shadow: 0 4px 20px var(--glow-purple);
+}
+
+.action-block:active {
+  transform: scale(0.99);
+}
+
+.action-icon {
+  font-size: 28px;
+  color: var(--accent);
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(187, 134, 252, 0.1);
+  border-radius: 12px;
+}
+
+.action-content {
+  flex: 1;
+}
+
+.action-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.action-subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.action-arrow {
+  color: var(--text-secondary);
+  font-size: 18px;
+  transition: transform 0.2s;
+}
+
+.action-block:hover .action-arrow {
+  transform: translateX(3px);
+  color: var(--accent);
+}
+
+.action-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Form Styles */
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.toggle-pills {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.toggle-pill {
+  flex: 1;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text-secondary);
+}
+
+.toggle-pill.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #000;
+  font-weight: 600;
+}
+
+.toggle-pill.income { color: var(--green); }
+.toggle-pill.income.active { background: var(--green); color: #000; }
+.toggle-pill.expense { color: var(--red); }
+.toggle-pill.expense.active { background: var(--red); color: #fff; }
+
+.form-input {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--glow-purple);
+}
+
+.form-input::placeholder {
+  color: var(--text-secondary);
+}
+
+.form-input.amount {
+  font-size: 24px;
+  font-weight: 600;
+  text-align: center;
+  padding: 18px;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.product-card {
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+}
+
+.product-name {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.product-stock {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.product-input {
+  width: 100%;
+  padding: 10px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 16px;
+  text-align: center;
+}
+
+.product-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.product-price {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-top: 4px;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+  border-top: 1px solid var(--border);
+  margin-bottom: 18px;
+}
+
+.total-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.total-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.save-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, var(--accent), #9966cc);
+  border: none;
+  border-radius: 14px;
+  color: #000;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.save-btn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 20px var(--glow-purple);
+}
+
+.save-btn:active {
+  transform: scale(0.98);
+}
+
+.save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.save-btn.loading::after {
+  content: '';
+  width: 18px;
+  height: 18px;
+  border: 2px solid transparent;
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Agent List */
+.agent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.agent-card {
+  background: var(--bg-card);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.agent-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border);
+  transform: translateX(4px);
+}
+
+.agent-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.agent-region {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.agent-name {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.agent-debt {
+  font-size: 16px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.agent-debt.positive { color: var(--red); }
+.agent-debt.zero { color: var(--green); }
+
+.agent-arrow {
+  color: var(--text-secondary);
+  margin-left: 10px;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  background: var(--bg-card);
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.tab {
+  flex: 1;
+  padding: 10px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text-secondary);
+}
+
+.tab.active {
+  background: var(--accent);
+  color: #000;
+  font-weight: 600;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* Price Row */
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.price-row:last-child {
+  border-bottom: none;
+}
+
+.price-name {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.price-input {
+  width: 120px;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-size: 15px;
+  text-align: right;
+  font-weight: 600;
+}
+
+.price-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.price-suffix {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-left: 6px;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--green);
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+  transform: translateX(400px);
+  transition: transform 0.3s ease;
+  z-index: 2000;
+  max-width: 320px;
+}
+
+.toast.show {
+  transform: translateX(0);
+}
+
+.toast.error {
+  border-left-color: var(--red);
+}
+
+.toast-icon {
+  font-size: 18px;
+}
+
+.toast.success .toast-icon { color: var(--green); }
+.toast.error .toast-icon { color: var(--red); }
+
+.toast-message {
+  font-size: 14px;
+  flex: 1;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(10, 10, 15, 0.9);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.loading-overlay.show {
+  display: flex;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-text {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .container { padding: 12px; }
+  .cards-grid { gap: 12px; }
+  .card { padding: 16px; }
+  .card-value { font-size: 24px; }
+  .action-block { padding: 14px; }
+  .action-icon { width: 42px; height: 42px; font-size: 24px; }
+  .form-input.amount { font-size: 20px; }
+}
+
+/* Utility */
+.hidden { display: none !important; }
+.text-green { color: var(--green); }
+.text-red { color: var(--red); }
+.text-accent { color: var(--accent); }
+.mt-20 { margin-top: 20px; }
+.mb-10 { margin-bottom: 10px; }
+.text-center { text-align: center; }
+</style>
 </head>
 <body>
+<div id="progress-bar"></div>
 
 <div class="container">
-    <div id="menu-main">
-        <h1>Учет Предприятия</h1>
-        <button class="btn" onclick="showSection('menu-office')">ОФИС</button>
-        <button class="btn" onclick="showSection('menu-regions')">АГЕНТЫ</button>
-        <button class="btn" onclick="openPrices()">ЦЕНА</button>
+<!-- HEADER -->
+<header class="header">
+<div class="header-title">Учет Предприятия</div>
+<div class="header-right">
+<div class="clock">
+<div class="clock-time" id="clock-time">00:00:00</div>
+<div id="clock-date">01.01.2026</div>
+</div>
+<button class="refresh-btn" id="refresh-btn" title="Обновить">⟳</button>
+</div>
+</header>
+<!-- SCREEN 1: MAIN DASHBOARD -->
+<div id="screen-dashboard" class="screen active">
+  <div class="cards-grid">
+    <div class="card cash" onclick="showScreen('screen-office')">
+      <div class="card-label">💰 КАССА</div>
+      <div class="card-value" id="cash-amount">0</div>
+      <div class="card-subtitle">сум</div>
     </div>
+    <div class="card bank" onclick="showScreen('screen-office')">
+      <div class="card-label">🏦 БАНК</div>
+      <div class="card-value" id="bank-amount">0</div>
+      <div class="card-subtitle">сум</div>
+    </div>
+    <div class="card stock" onclick="showScreen('screen-stock')">
+      <div class="card-label">📦 СКЛАД</div>
+      <div class="card-value" id="stock-count">0</div>
+      <div class="card-subtitle">товаров</div>
+    </div>
+    <div class="card debts" onclick="showScreen('screen-agents')">
+      <div class="card-label">⚠️ ДОЛГИ</div>
+      <div class="card-value" id="debts-total">0</div>
+      <div class="card-subtitle">сум</div>
+    </div>
+  </div>
+  
+  <div class="alert-bar" id="alert-bar">
+    <span class="alert-icon">🔴</span>
+    <div class="alert-text alert-ticker"><span id="alert-message"></span></div>
+  </div>
+  
+  <div class="action-blocks">
+    <div class="action-block" onclick="showScreen('screen-office')">
+      <div class="action-icon">🏢</div>
+      <div class="action-content">
+        <div class="action-title">ОФИС</div>
+        <div class="action-subtitle">Приход и расход • Касса и банк</div>
+      </div>
+      <span class="action-arrow">→</span>
+    </div>
+    
+    <div class="action-block" onclick="showScreen('screen-agents')">
+      <div class="action-icon">👥</div>
+      <div class="action-content">
+        <div class="action-title">АГЕНТЫ</div>
+        <div class="action-subtitle">7 регионов • Финансы и товары</div>
+      </div>
+      <span class="action-arrow">→</span>
+    </div>
+    
+    <div class="action-row">
+      <div class="action-block" onclick="showScreen('screen-stock')">
+        <div class="action-icon">📦</div>
+        <div class="action-content">
+          <div class="action-title">СКЛАД</div>
+          <div class="action-subtitle">Приход товара</div>
+        </div>
+        <span class="action-arrow">→</span>
+      </div>
+      <div class="action-block" onclick="showScreen('screen-prices')">
+        <div class="action-icon">💲</div>
+        <div class="action-content">
+          <div class="action-title">ЦЕНЫ</div>
+          <div class="action-subtitle">6 товаров</div>
+        </div>
+        <span class="action-arrow">→</span>
+      </div>
+    </div>
+  </div>
+</div>
 
-    <div id="menu-office" class="hidden">
-        <button class="btn back-btn" onclick="showSection('menu-main')">← Назад</button>
-        <h2>Тип Платежа</h2>
-        <button class="btn" onclick="selectOfficeType('Переч')">Перечисление</button>
-        <button class="btn" onclick="selectOfficeType('Налич')">Наличные</button>
-        <button class="btn" onclick="selectOfficeType('Карта')">Карта</button>
+<!-- SCREEN 2: ОФИС -->
+<div id="screen-office" class="screen">
+  <button class="back-btn" onclick="showScreen('screen-dashboard')">Назад</button>
+  <h2 class="screen-title">🏢 ОФИС</h2>
+  
+  <div class="form-group">
+    <label class="form-label">Тип оплаты</label>
+    <div class="toggle-pills">
+      <div class="toggle-pill active" data-value="Налич" onclick="selectOfficeType(this)">Наличные</div>
+      <div class="toggle-pill" data-value="Переч" onclick="selectOfficeType(this)">Перечисление</div>
     </div>
+  </div>
+  
+  <div class="form-group">
+    <label class="form-label">Тип операции</label>
+    <div class="toggle-pills">
+      <div class="toggle-pill income active" data-type="income" onclick="selectOfficeFlow(this)">Приход ↑</div>
+      <div class="toggle-pill expense" data-type="expense" onclick="selectOfficeFlow(this)">Расход ↓</div>
+    </div>
+  </div>
+  
+  <div class="form-group">
+    <label class="form-label">Сумма</label>
+    <input type="number" class="form-input amount" id="office-amount" placeholder="0" min="0">
+  </div>
+  
+  <div class="form-group">
+    <label class="form-label">Комментарий</label>
+    <input type="text" class="form-input" id="office-comment" placeholder="Введите комментарий">
+  </div>
+  
+  <button class="save-btn" id="office-save" onclick="saveOffice()">
+    <span>Сохранить</span>
+  </button>
+</div>
 
-    <div id="menu-office-flow" class="hidden">
-        <button class="btn back-btn" onclick="showSection('menu-office')">← Назад</button>
-        <h2 id="office-type-title"></h2>
-        <button class="btn" style="border-color: var(--success-color)" onclick="selectOfficeMode('Приход')">Приход</button>
-        <button class="btn" style="border-color: var(--danger-color)" onclick="selectOfficeMode('Расход')">Расход</button>
-    </div>
+<!-- SCREEN 3: АГЕНТЫ -->
+<div id="screen-agents" class="screen">
+  <button class="back-btn" onclick="showScreen('screen-dashboard')">Назад</button>
+  <h2 class="screen-title">👥 АГЕНТЫ</h2>
+  
+  <div class="agent-list" id="agent-list">
+    <!-- Agents populated by JS -->
+  </div>
+</div>
 
-    <div id="form-office" class="hidden">
-        <button class="btn back-btn" onclick="showSection('menu-office-flow')">← Назад</button>
-        <h2>Ввод данных</h2>
-        <input type="number" id="office-amount" placeholder="Сумма">
-        <input type="text" id="office-comment" placeholder="Комментарий">
-        <button class="btn" onclick="submitOffice()">Сохранить</button>
-        <div id="office-loading" class="loading hidden">Отправка...</div>
+<!-- SCREEN 4: AGENT DETAIL -->
+<div id="screen-agent-detail" class="screen">
+  <button class="back-btn" onclick="showScreen('screen-agents')">Назад</button>
+  <h2 class="screen-title" id="agent-detail-title">Агент</h2>
+  
+  <div class="card debts mb-10">
+    <div class="card-label">Текущий долг</div>
+    <div class="card-value" id="agent-debt-display">0</div>
+    <div class="card-subtitle">сум</div>
+  </div>
+  
+  <div class="tabs">
+    <div class="tab active" data-tab="finance" onclick="switchAgentTab('finance')">Финансы 💰</div>
+    <div class="tab" data-tab="products" onclick="switchAgentTab('products')">Товары 📦</div>
+  </div>
+  
+  <!-- Finance Tab -->
+  <div id="agent-finance" class="tab-content active">
+    <div class="form-group">
+      <label class="form-label">Тип оплаты</label>
+      <div class="toggle-pills">
+        <div class="toggle-pill active" data-value="Налич" onclick="selectAgentPayType(this)">Наличные</div>
+        <div class="toggle-pill" data-value="Переч" onclick="selectAgentPayType(this)">Перечисление</div>
+      </div>
     </div>
+    
+    <div class="form-group">
+      <label class="form-label">Сумма платежа</label>
+      <input type="number" class="form-input amount" id="agent-finance-amount" placeholder="0" min="0">
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Комментарий</label>
+      <input type="text" class="form-input" id="agent-finance-comment" placeholder="Введите комментарий">
+    </div>
+    
+    <button class="save-btn" id="agent-finance-save" onclick="saveAgentFinance()">
+      <span>Сохранить платеж</span>
+    </button>
+  </div>
+  
+  <!-- Products Tab -->
+  <div id="agent-products" class="tab-content">
+    <div class="product-grid" id="agent-products-grid">
+      <!-- Products populated by JS -->
+    </div>
+    
+    <div class="total-row">
+      <span class="total-label">Итого:</span>
+      <span class="total-value" id="agent-products-total">0</span>
+      <span class="price-suffix">сум</span>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Комментарий</label>
+      <input type="text" class="form-input" id="agent-products-comment" placeholder="Введите комментарий">
+    </div>
+    
+    <button class="save-btn" id="agent-products-save" onclick="saveAgentProducts()">
+      <span>Отправить товар</span>
+    </button>
+  </div>
+</div>
 
-    <div id="menu-regions" class="hidden">
-        <button class="btn back-btn" onclick="showSection('menu-main')">← Назад</button>
-        <h2>Регионы</h2>
-        <div id="regions-list"></div>
-    </div>
+<!-- SCREEN 5: СКЛАД -->
+<div id="screen-stock" class="screen">
+  <button class="back-btn" onclick="showScreen('screen-dashboard')">Назад</button>
+  <h2 class="screen-title">📦 СКЛАД — Приход товара</h2>
+  
+  <div class="product-grid" id="stock-products-grid">
+    <!-- Products populated by JS -->
+  </div>
+  
+  <div class="total-row">
+    <span class="total-label">Общая стоимость:</span>
+    <span class="total-value" id="stock-total">0</span>
+    <span class="price-suffix">сум</span>
+  </div>
+  
+  <div class="form-group">
+    <label class="form-label">Комментарий</label>
+    <input type="text" class="form-input" id="stock-comment" placeholder="Введите комментарий">
+  </div>
+  
+  <button class="save-btn" id="stock-save" onclick="saveStock()">
+    <span>Добавить на склад</span>
+  </button>
+</div>
 
-    <div id="menu-region-action" class="hidden">
-        <button class="btn back-btn" onclick="showSection('menu-regions')">← Назад</button>
-        <h2 id="region-title"></h2>
-        <button class="btn" onclick="selectRegionMode('amount')">Сумма (Финансы)</button>
-        <button class="btn" onclick="selectRegionMode('product')">Товар</button>
-    </div>
+<!-- SCREEN 6: ЦЕНЫ -->
+<div id="screen-prices" class="screen">
+  <button class="back-btn" onclick="showScreen('screen-dashboard')">Назад</button>
+  <h2 class="screen-title">💲 Настройка Цен</h2>
+  
+  <div id="prices-list">
+    <!-- Prices populated by JS -->
+  </div>
+  
+  <button class="save-btn mt-20" onclick="savePrices()">
+    <span>Сохранить все цены</span>
+  </button>
+</div>
 
-    <div id="form-region-amount" class="hidden">
-        <button class="btn back-btn" onclick="showSection('menu-region-action')">← Назад</button>
-        <h2>Финансы</h2>
-        <select id="region-pay-type">
-            <option value="Переч">Перечисление</option>
-            <option value="Налич">Наличные</option>
-            <option value="Карта">Карта</option>
-        </select>
-        <input type="number" id="region-amount" placeholder="Сумма">
-        <input type="text" id="region-amount-comment" placeholder="Комментарий">
-        <button class="btn" onclick="submitRegionAmount()">Сохранить</button>
-        <div id="region-amount-loading" class="loading hidden">Отправка...</div>
-    </div>
+</div>
 
-    <div id="form-region-product" class="hidden">
-        <button class="btn back-btn" onclick="showSection('menu-region-action')">← Назад</button>
-        <h2>Товары</h2>
-        <p style="color:var(--secondary-text); font-size:12px;">Введите количества через пробел:<br>Севен Леди Триб Неф Лакт Перф</p>
-        <input type="text" id="region-quantities" placeholder="Например: 10 5 0 2 1 3">
-        <input type="text" id="region-product-comment" placeholder="Комментарий">
-        <button class="btn" onclick="submitRegionProduct()">Сохранить</button>
-        <div id="region-product-loading" class="loading hidden">Отправка...</div>
-    </div>
+<!-- TOAST -->
+<div class="toast" id="toast">
+<span class="toast-icon">✓</span>
+<span class="toast-message" id="toast-message">Успешно сохранено</span>
+<button class="toast-close" onclick="hideToast()">×</button>
+</div>
 
-    <div id="menu-prices" class="hidden">
-        <button class="btn back-btn" onclick="showSection('menu-main')">← Назад</button>
-        <h2>Настройка Цен</h2>
-        <div id="prices-inputs"></div>
-        <button class="btn" style="margin-top:20px; border-color: var(--success-color);" onclick="savePrices()">Сохранить Цены</button>
-        <div id="prices-loading" class="loading hidden">Сохранение...</div>
-    </div>
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loading-overlay">
+<div class="spinner"></div>
+<div class="loading-text">Обработка...</div>
 </div>
 
 <script>
-    // ВСТАВЬ СЮДА НОВУЮ ССЫЛКУ ИЗ ШАГА 3
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxBzd5sv3JjDfjs4-vPlKK1AFxR3JaBUde7EqM_h-xpYGSBWZnD5Ge-eR7gUskcK-fTSA/exec";
-    
-    const regions = ["Гулистан", "Бухара", "Наманган", "Андижан", "Карши", "Термиз", "Нукус", "Ташкент", "Таш.обл", "Навоий", "Фергана", "Джизак", "Самарканд", "Хорезм"];
-    const products = [
-        { key: 'seven', name: 'Севен' }, { key: 'lady', name: 'Леди' },
-        { key: 'trib', name: 'Триб' }, { key: 'nef', name: 'Неф' },
-        { key: 'lact', name: 'Лакт' }, { key: 'perf', name: 'Перф' }
-    ];
+// CONFIG
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxBzd5sv3JjDfjs4-vPlKK1AFxR3JaBUde7EqM_h-xpYGSBWZnD5Ge-eR7gUskcK-fTSA/exec';
+const TIMEZONE = 'Asia/Tashkent';
 
-    let currentPrices = {};
-    let currentOfficeType = "", currentOfficeMode = "", currentRegion = "", currentRegionMode = "";
+// DATA
+const AGENTS = [
+{ region: 'Гулистан', agent: 'Наргис' },
+{ region: 'Бухара', agent: 'Умида' },
+{ region: 'Наманган', agent: 'Элёр' },
+{ region: 'Нукус', agent: 'Гулмира' },
+{ region: 'Карши', agent: 'Мадина' },
+{ region: 'Термиз', agent: 'Нигина' },
+{ region: 'Ташкент', agent: 'Темур' }
+];
 
-    const regionListDiv = document.getElementById('regions-list');
-    regions.forEach(reg => {
-        const btn = document.createElement('button');
-        btn.className = 'btn';
-        btn.innerText = reg;
-        btn.onclick = () => selectRegion(reg);
-        regionListDiv.appendChild(btn);
-    });
+const PRODUCTS = [
+{ key: 'seven', name: 'Севен', price: 105000 },
+{ key: 'lady', name: 'Леди', price: 100000 },
+{ key: 'trib', name: 'Триб', price: 70000 },
+{ key: 'nef', name: 'Неф', price: 60000 },
+{ key: 'lact', name: 'Лакт', price: 70000 },
+{ key: 'perf', name: 'Перф', price: 200000 }
+];
 
-    fetch(SCRIPT_URL).then(r => r.json()).then(data => {
-        currentPrices = data;
-        localStorage.setItem('biz_prices', JSON.stringify(data));
-    }).catch(() => {
-        const stored = localStorage.getItem('biz_prices');
-        if(stored) currentPrices = JSON.parse(stored);
-    });
+// STATE
+let dashboardData = {};
+let currentAgent = null;
+let officeType = 'Налич';
+let officeFlow = 'income';
+let agentPayType = 'Налич';
+let refreshInterval = null;
 
-    function showSection(id) {
-        document.querySelectorAll('.container > div').forEach(div => div.classList.add('hidden'));
-        document.getElementById(id).classList.remove('hidden');
-    }
+// INIT
+document.addEventListener('DOMContentLoaded', () => {
+initClock();
+loadDashboard();
+refreshInterval = setInterval(loadDashboard, 60000);
+setupProductInputs();
+});
 
-    function selectOfficeType(type) { currentOfficeType = type; document.getElementById('office-type-title').innerText = type; showSection('menu-office-flow'); }
-    function selectOfficeMode(mode) { currentOfficeMode = mode; showSection('form-office'); }
-    function submitOffice() {
-        const amount = document.getElementById('office-amount').value;
-        const comment = document.getElementById('office-comment').value;
-        if(!amount) return alert("Введите сумму");
-        toggleLoading('office-loading', true);
-        let income = 0, expense = 0;
-        if(currentOfficeMode === 'Приход') income = amount; else expense = amount;
-        const data = { sheet: "ОФИС", type: currentOfficeType, income: income, expense: expense, comment: comment };
-        sendData(data, () => {
-            toggleLoading('office-loading', false);
-            document.getElementById('office-amount').value = ''; document.getElementById('office-comment').value = '';
-            alert("Сохранено!"); showSection('menu-main');
-        });
-    }
+// CLOCK
+function initClock() {
+function update() {
+const now = new Date();
+const timeStr = now.toLocaleTimeString('ru-RU', { timeZone: TIMEZONE, hour12: false });
+const dateStr = now.toLocaleDateString('ru-RU', { timeZone: TIMEZONE, day: '2-digit', month: '2-digit', year: 'numeric' });
+document.getElementById('clock-time').textContent = timeStr;
+document.getElementById('clock-date').textContent = dateStr;
+}
+update();
+setInterval(update, 1000);
+}
 
-    function selectRegion(region) { currentRegion = region; document.getElementById('region-title').innerText = region; showSection('menu-region-action'); }
-    function selectRegionMode(mode) { currentRegionMode = mode; if(mode === 'amount') showSection('form-region-amount'); else showSection('form-region-product'); }
+// NAVIGATION
+function showScreen(screenId) {
+document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+document.getElementById(screenId).classList.add('active');
 
-    function submitRegionAmount() {
-        const amount = document.getElementById('region-amount').value;
-        const type = document.getElementById('region-pay-type').value;
-        const comment = document.getElementById('region-amount-comment').value;
-        if(!amount) return alert("Введите сумму");
-        toggleLoading('region-amount-loading', true);
-        const data = { sheet: currentRegion, quantities: [0,0,0,0,0,0], finAmount: amount, payType: type, comment: comment };
-        sendData(data, () => {
-            toggleLoading('region-amount-loading', false);
-            document.getElementById('region-amount').value = ''; document.getElementById('region-amount-comment').value = '';
-            alert("Сохранено!"); showSection('menu-main');
-        });
-    }
+if (screenId === 'screen-agents') renderAgentList();
+if (screenId === 'screen-stock') renderStockGrid();
+if (screenId === 'screen-prices') renderPricesList();
+if (screenId === 'screen-agent-detail' && currentAgent) {
+document.getElementById('agent-detail-title').textContent = `${currentAgent.agent} • ${currentAgent.region}`;
+document.getElementById('agent-debt-display').textContent = formatNumber(dashboardData.debts?.[currentAgent.region] || 0);
+renderAgentProductsGrid();
+}
+window.scrollTo(0, 0);
+}
 
-    function submitRegionProduct() {
-        const qtyStr = document.getElementById('region-quantities').value;
-        const comment = document.getElementById('region-product-comment').value;
-        const quantities = qtyStr.trim().split(/\s+/).map(Number);
-        if(quantities.length !== 6) return alert("Нужно ввести 6 чисел");
-        toggleLoading('region-product-loading', true);
-        const data = { sheet: currentRegion, quantities: quantities, finAmount: 0, payType: "", comment: comment };
-        sendData(data, () => {
-            toggleLoading('region-product-loading', false);
-            document.getElementById('region-quantities').value = ''; document.getElementById('region-product-comment').value = '';
-            alert("Сохранено!"); showSection('menu-main');
-        });
-    }
+// DASHBOARD
+async function loadDashboard() {
+showProgress(30);
+try {
+const response = await fetch(SCRIPT_URL, { method: 'GET', mode: 'cors' });
+const data = await response.json();
+dashboardData = data;
+updateDashboard(data);
+showProgress(100);
+setTimeout(() => document.getElementById('progress-bar').style.width = '0%', 300);
+} catch (e) {
+console.error('Load error:', e);
+showToast('Ошибка загрузки данных', 'error');
+showProgress(100);
+setTimeout(() => document.getElementById('progress-bar').style.width = '0%', 300);
+}
+}
 
-    function openPrices() {
-        const container = document.getElementById('prices-inputs');
-        container.innerHTML = '';
-        const stored = localStorage.getItem('biz_prices');
-        const prices = stored ? JSON.parse(stored) : currentPrices;
-        products.forEach(p => {
-            const row = document.createElement('div');
-            row.className = 'price-row';
-            row.innerHTML = `<label>${p.name}</label><input type="number" id="price-${p.key}" value="${prices[p.key] || 0}">`;
-            container.appendChild(row);
-        });
-        showSection('menu-prices');
-    }
+function updateDashboard(data) {
+// Animate numbers
+animateValue('cash-amount', data.balances?.cash || 0);
+animateValue('bank-amount', data.balances?.bank || 0);
 
-    function savePrices() {
-        const newPrices = {};
-        products.forEach(p => { newPrices[p.key] = document.getElementById(`price-${p.key}`).value; });
-        toggleLoading('prices-loading', true);
-        localStorage.setItem('biz_prices', JSON.stringify(newPrices));
-        currentPrices = newPrices;
-        const data = { action: 'update_prices', prices: newPrices };
-        sendData(data, () => {
-            toggleLoading('prices-loading', false);
-            alert("Цены обновлены!");
-            showSection('menu-main');
-        });
-    }
+// Stock count = sum of all product quantities
+const stockTotal = Object.values(data.stock || {}).reduce((a, b) => a + b, 0);
+animateValue('stock-count', stockTotal);
 
-    function toggleLoading(id, show) {
-        const el = document.getElementById(id);
-        const btn = el.previousElementSibling;
-        if(show) { el.classList.remove('hidden'); btn.disabled = true; }
-        else { el.classList.add('hidden'); btn.disabled = false; }
-    }
+// Debts total
+const debtsTotal = Object.values(data.debts || {}).reduce((a, b) => a + b, 0);
+animateValue('debts-total', debtsTotal);
 
-    function sendData(data, callback) {
-        fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
-        .then(() => { setTimeout(callback, 500); })
-        .catch(err => { alert("Ошибка сети"); toggleLoading('office-loading', false); });
-    }
+// Alerts
+const alertBar = document.getElementById('alert-bar');
+const alertMsg = document.getElementById('alert-message');
+if (data.alerts?.length > 0) {
+const alerts = data.alerts.map(a => `${a.agent} (${a.region}) — ${a.daysOverdue} дней`).join(' • ');
+alertMsg.textContent = `Просрочено: ${alerts}`;
+alertBar.classList.add('show');
+} else {
+alertBar.classList.remove('show');
+}
+}
+
+function animateValue(elementId, end) {
+const el = document.getElementById(elementId);
+const start = parseInt(el.textContent.replace(/\s/g, '')) || 0;
+const duration = 800;
+const startTime = performance.now();
+
+function step(now) {
+const progress = Math.min((now - startTime) / duration, 1);
+const eased = 1 - Math.pow(1 - progress, 3);
+const current = Math.round(start + (end - start) * eased);
+el.textContent = formatNumber(current);
+if (progress < 1) requestAnimationFrame(step);
+}
+requestAnimationFrame(step);
+}
+
+// FORMATTING
+function formatNumber(num) {
+return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+}
+
+function formatDateTashkent() {
+const now = new Date();
+return now.toLocaleString('ru-RU', {
+timeZone: TIMEZONE,
+day: '2-digit', month: '2-digit', year: 'numeric',
+hour: '2-digit', minute: '2-digit'
+}).replace(',', '');
+}
+
+// PROGRESS BAR
+function showProgress(percent) {
+document.getElementById('progress-bar').style.width = percent + '%';
+}
+
+// TOAST
+function showToast(message, type = 'success') {
+const toast = document.getElementById('toast');
+const msg = document.getElementById('toast-message');
+msg.textContent = message;
+toast.className = 'toast ' + type;
+toast.classList.add('show');
+setTimeout(hideToast, 4000);
+}
+
+function hideToast() {
+document.getElementById('toast').classList.remove('show');
+}
+
+// LOADING
+function showLoading(show) {
+document.getElementById('loading-overlay').classList.toggle('show', show);
+}
+
+// OFFICE SCREEN
+function selectOfficeType(el) {
+document.querySelectorAll('#screen-office .toggle-pills:first-child .toggle-pill').forEach(p => p.classList.remove('active'));
+el.classList.add('active');
+officeType = el.dataset.value;
+}
+
+function selectOfficeFlow(el) {
+document.querySelectorAll('#screen-office .toggle-pills:last-child .toggle-pill').forEach(p => p.classList.remove('active'));
+el.classList.add('active');
+officeFlow = el.dataset.type;
+}
+
+async function saveOffice() {
+const amount = parseFloat(document.getElementById('office-amount').value) || 0;
+const comment = document.getElementById('office-comment').value;
+
+if (amount <= 0) {
+showToast('Введите сумму', 'error');
+return;
+}
+
+const btn = document.getElementById('office-save');
+btn.classList.add('loading');
+btn.disabled = true;
+
+const row = {
+date: formatDateTashkent(),
+type: officeType,
+income: officeFlow === 'income' ? amount : 0,
+expense: officeFlow === 'expense' ? amount : 0,
+comment: comment
+};
+
+try {
+await fetch(SCRIPT_URL, {
+method: 'POST',
+mode: 'no-cors',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ action: 'add_office', row })
+});
+showToast('Запись сохранена');
+document.getElementById('office-amount').value = '';
+document.getElementById('office-comment').value = '';
+setTimeout(() => { showScreen('screen-dashboard'); loadDashboard(); }, 800);
+} catch (e) {
+showToast('Ошибка сохранения', 'error');
+} finally {
+btn.classList.remove('loading');
+btn.disabled = false;
+}
+}
+
+// AGENTS SCREEN
+function renderAgentList() {
+const list = document.getElementById('agent-list');
+list.innerHTML = '';
+
+AGENTS.forEach(({ region, agent }) => {
+const debt = dashboardData.debts?.[region] || 0;
+const card = document.createElement('div');
+card.className = 'agent-card';
+card.onclick = () => { currentAgent = { region, agent }; showScreen('screen-agent-detail'); };
+card.innerHTML = `
+<div class="agent-info">
+<span class="agent-region">${region}</span>
+<span class="agent-name">${agent}</span>
+</div>
+<span class="agent-debt ${debt > 0 ? 'positive' : 'zero'}">${formatNumber(debt)}</span>
+<span class="agent-arrow">→</span>
+`;
+list.appendChild(card);
+});
+}
+
+// AGENT DETAIL
+function switchAgentTab(tab) {
+document.querySelectorAll('#screen-agent-detail .tab').forEach(t => t.classList.remove('active'));
+document.querySelectorAll('#screen-agent-detail .tab-content').forEach(c => c.classList.remove('active'));
+document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('active');
+document.getElementById(`agent-${tab}`).classList.add('active');
+}
+
+function selectAgentPayType(el) {
+document.querySelectorAll('#agent-finance .toggle-pill').forEach(p => p.classList.remove('active'));
+el.classList.add('active');
+agentPayType = el.dataset.value;
+}
+
+function renderAgentProductsGrid() {
+const grid = document.getElementById('agent-products-grid');
+grid.innerHTML = '';
+
+PRODUCTS.forEach(p => {
+const card = document.createElement('div');
+card.className = 'product-card';
+card.innerHTML = `
+<div class="product-name">
+<span>${p.name}</span>
+<span class="product-stock">${formatNumber(dashboardData.stock?.[p.key] || 0)} на складе</span>
+</div>
+<input type="number" class="product-input" data-key="${p.key}" data-price="${p.price}" placeholder="0" min="0" oninput="calcAgentTotal()">
+<div class="product-price">${formatNumber(p.price)} сум/шт</div>
+`;
+grid.appendChild(card);
+});
+}
+
+function calcAgentTotal() {
+let total = 0;
+document.querySelectorAll('#agent-products-grid .product-input').forEach(input => {
+const qty = parseInt(input.value) || 0;
+const price = parseInt(input.dataset.price) || 0;
+total += qty * price;
+});
+document.getElementById('agent-products-total').textContent = formatNumber(total);
+return total;
+}
+
+async function saveAgentFinance() {
+const amount = parseFloat(document.getElementById('agent-finance-amount').value) || 0;
+const comment = document.getElementById('agent-finance-comment').value;
+
+if (!currentAgent || amount <= 0) {
+showToast('Введите сумму', 'error');
+return;
+}
+
+const btn = document.getElementById('agent-finance-save');
+btn.classList.add('loading');
+btn.disabled = true;
+
+const row = {
+date: formatDateTashkent(),
+seven: 0, lady: 0, trib: 0, nef: 0, lact: 0, perf: 0,
+sumProduct: 0,
+finAmount: amount,
+payType: agentPayType,
+comment: comment
+};
+
+try {
+await fetch(SCRIPT_URL, {
+method: 'POST',
+mode: 'no-cors',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ action: 'add_region', region: currentAgent.region, row })
+});
+showToast('Платеж сохранен');
+document.getElementById('agent-finance-amount').value = '';
+document.getElementById('agent-finance-comment').value = '';
+setTimeout(() => { showScreen('screen-dashboard'); loadDashboard(); }, 800);
+} catch (e) {
+showToast('Ошибка сохранения', 'error');
+} finally {
+btn.classList.remove('loading');
+btn.disabled = false;
+}
+}
+
+async function saveAgentProducts() {
+if (!currentAgent) return;
+
+const btn = document.getElementById('agent-products-save');
+btn.classList.add('loading');
+btn.disabled = true;
+
+const row = { date: formatDateTashkent(), sumProduct: 0, finAmount: 0, payType: '', comment: document.getElementById('agent-products-comment').value };
+let total = 0;
+
+PRODUCTS.forEach(p => {
+const input = document.querySelector(`#agent-products-grid .product-input[data-key="${p.key}"]`);
+const qty = parseInt(input?.value) || 0;
+row[p.key] = qty;
+total += qty * p.price;
+});
+row.sumProduct = total;
+
+try {
+await fetch(SCRIPT_URL, {
+method: 'POST',
+mode: 'no-cors',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ action: 'add_region', region: currentAgent.region, row })
+});
+showToast('Товар отправлен');
+document.getElementById('agent-products-comment').value = '';
+document.querySelectorAll('#agent-products-grid .product-input').forEach(i => i.value = '');
+document.getElementById('agent-products-total').textContent = '0';
+setTimeout(() => { showScreen('screen-dashboard'); loadDashboard(); }, 800);
+} catch (e) {
+showToast('Ошибка сохранения', 'error');
+} finally {
+btn.classList.remove('loading');
+btn.disabled = false;
+}
+}
+
+// STOCK SCREEN
+function setupProductInputs() {
+document.addEventListener('input', (e) => {
+if (e.target.classList.contains('product-input')) {
+if (e.target.closest('#stock-products-grid')) calcStockTotal();
+else if (e.target.closest('#agent-products-grid')) calcAgentTotal();
+}
+});
+}
+
+function renderStockGrid() {
+const grid = document.getElementById('stock-products-grid');
+grid.innerHTML = '';
+
+PRODUCTS.forEach(p => {
+const card = document.createElement('div');
+card.className = 'product-card';
+card.innerHTML = `
+<div class="product-name">
+<span>${p.name}</span>
+<span class="product-stock">${formatNumber(dashboardData.stock?.[p.key] || 0)} сейчас</span>
+</div>
+<input type="number" class="product-input" data-key="${p.key}" data-price="${p.price}" placeholder="0" min="0">
+<div class="product-price">${formatNumber(p.price)} сум/шт</div>
+`;
+grid.appendChild(card);
+});
+calcStockTotal();
+}
+
+function calcStockTotal() {
+let total = 0;
+document.querySelectorAll('#stock-products-grid .product-input').forEach(input => {
+const qty = parseInt(input.value) || 0;
+const price = parseInt(input.dataset.price) || 0;
+total += qty * price;
+});
+document.getElementById('stock-total').textContent = formatNumber(total);
+return total;
+}
+
+async function saveStock() {
+const btn = document.getElementById('stock-save');
+btn.classList.add('loading');
+btn.disabled = true;
+
+const row = { date: formatDateTashkent() };
+PRODUCTS.forEach(p => {
+const input = document.querySelector(`#stock-products-grid .product-input[data-key="${p.key}"]`);
+row[p.key] = parseInt(input?.value) || 0;
+});
+
+try {
+await fetch(SCRIPT_URL, {
+method: 'POST',
+mode: 'no-cors',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ action: 'add_sklads', row })
+});
+showToast('Товар добавлен на склад');
+document.querySelectorAll('#stock-products-grid .product-input').forEach(i => i.value = '');
+document.getElementById('stock-total').textContent = '0';
+setTimeout(() => { showScreen('screen-dashboard'); loadDashboard(); }, 800);
+} catch (e) {
+showToast('Ошибка сохранения', 'error');
+} finally {
+btn.classList.remove('loading');
+btn.disabled = false;
+}
+}
+
+// PRICES SCREEN
+function renderPricesList() {
+const list = document.getElementById('prices-list');
+list.innerHTML = '';
+
+PRODUCTS.forEach(p => {
+const currentPrice = dashboardData.prices?.[p.key] || p.price;
+const row = document.createElement('div');
+row.className = 'price-row';
+row.innerHTML = `
+<span class="price-name">${p.name}</span>
+<div style="display:flex;align-items:center">
+<input type="number" class="price-input" data-key="${p.key}" value="${currentPrice}" min="0">
+<span class="price-suffix">сум</span>
+</div>
+`;
+list.appendChild(row);
+});
+}
+
+async function savePrices() {
+showLoading(true);
+const prices = {};
+document.querySelectorAll('.price-input').forEach(input => {
+prices[input.dataset.key] = parseInt(input.value) || 0;
+});
+
+try {
+await fetch(SCRIPT_URL, {
+method: 'POST',
+mode: 'no-cors',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ action: 'update_prices', prices })
+});
+showToast('Цены обновлены');
+setTimeout(() => { showScreen('screen-dashboard'); loadDashboard(); showLoading(false); }, 800);
+} catch (e) {
+showToast('Ошибка сохранения', 'error');
+showLoading(false);
+}
+}
+
+// REFRESH BUTTON
+document.getElementById('refresh-btn').addEventListener('click', function() {
+this.classList.add('spinning');
+loadDashboard().finally(() => {
+setTimeout(() => this.classList.remove('spinning'), 1000);
+});
+});
 </script>
 </body>
 </html>
